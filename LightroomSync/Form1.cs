@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO.Compression;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace LightroomSync
 {
@@ -12,48 +13,58 @@ namespace LightroomSync
 
         private void Log(string message)
         {
-            eventsTextBox.Text = message + Environment.NewLine + eventsTextBox.Text;
+            if (eventsTextBox.InvokeRequired)
+            {
+                eventsTextBox.Invoke(new Action<string>(Log), message + Environment.NewLine + eventsTextBox.Text);
+            }
+            else
+            {
+                eventsTextBox.Text = message + Environment.NewLine + eventsTextBox.Text;
+            }
         }
 
-        static void ZipFilesAndFolders(string zipFilename, string[] filesToZip, string[] foldersToZip)
+        static async Task ZipFilesAndFolders(string zipFilename, string[] filesToZip, string[] foldersToZip)
         {
-            using (ZipArchive zipArchive = ZipFile.Open(zipFilename, ZipArchiveMode.Create))
+            await Task.Run(() =>
             {
-                // Zip individual files
-                foreach (string filePath in filesToZip)
+                using (ZipArchive zipArchive = ZipFile.Open(zipFilename, ZipArchiveMode.Create))
                 {
-                    if (File.Exists(filePath))
+                    // Zip individual files
+                    foreach (string filePath in filesToZip)
                     {
-                        string entryName = Path.GetFileName(filePath);
-                        zipArchive.CreateEntryFromFile(filePath, entryName);
-                    }
-                    else
-                    {
-                        throw new FileNotFoundException($"File not found: {filePath}");
-                    }
-                }
-
-                // Zip folders
-                foreach (string folderPath in foldersToZip)
-                {
-                    if (Directory.Exists(folderPath))
-                    {
-                        string folderName = Path.GetFileName(folderPath);
-
-                        // Zip files inside the folder
-                        string[] files = Directory.GetFiles(folderPath);
-                        foreach (string filePath in files)
+                        if (File.Exists(filePath))
                         {
-                            string entryName = Path.Combine(folderName, Path.GetFileName(filePath));
+                            string entryName = Path.GetFileName(filePath);
                             zipArchive.CreateEntryFromFile(filePath, entryName);
                         }
+                        else
+                        {
+                            throw new FileNotFoundException($"File not found: {filePath}");
+                        }
                     }
-                    else
+
+                    // Zip folders
+                    foreach (string folderPath in foldersToZip)
                     {
-                        throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
+                        if (Directory.Exists(folderPath))
+                        {
+                            string folderName = Path.GetFileName(folderPath);
+
+                            // Zip files inside the folder
+                            string[] files = Directory.GetFiles(folderPath);
+                            foreach (string filePath in files)
+                            {
+                                string entryName = Path.Combine(folderName, Path.GetFileName(filePath));
+                                zipArchive.CreateEntryFromFile(filePath, entryName);
+                            }
+                        }
+                        else
+                        {
+                            throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
+                        }
                     }
                 }
-            }
+            });
         }
 
         public Form1()
@@ -99,25 +110,15 @@ namespace LightroomSync
             networkFolderTextBox.Text = config.NetworkFolder;
 
             status.LastUser = System.Environment.MachineName;
-
-            
-
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
             if (Status.LightroomIsOpen())
             {
                 Log("ERROR: Lightroom is open, cannot save to network drive");
                 return;
             }
-
-
-            
-
-
-
-
 
             string[] files = Directory.GetFiles(config.LocalFolder, "*.lrcat");
 
@@ -129,7 +130,7 @@ namespace LightroomSync
 
 
                 string[] filesToZip = { config.LocalFolder + "\\" + catName + ".lrcat" };
-                string[] foldersToZip = { config.LocalFolder + "\\" + catName + ".lrcat-data", config.LocalFolder + "\\" + catName + " Helper.lrdata"};
+                string[] foldersToZip = { config.LocalFolder + "\\" + catName + ".lrcat-data", config.LocalFolder + "\\" + catName + " Helper.lrdata" };
 
                 DateTime lastModified = File.GetLastWriteTime(file);
                 string customFormat = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
@@ -137,7 +138,7 @@ namespace LightroomSync
                 Log("Zipping " + catName);
                 try
                 {
-                    ZipFilesAndFolders(customFormat, filesToZip, foldersToZip);
+                    await ZipFilesAndFolders(customFormat, filesToZip, foldersToZip);
                     status.MostRecentVersions.Append(customFormat);
                     Log("Files and folders have been zipped successfully.");
                 }

@@ -86,6 +86,7 @@
             eventsTextBox.Location = new Point(12, 152);
             eventsTextBox.Multiline = true;
             eventsTextBox.Name = "eventsTextBox";
+            eventsTextBox.ScrollBars = ScrollBars.Vertical;
             eventsTextBox.Size = new Size(776, 126);
             eventsTextBox.TabIndex = 5;
             // 

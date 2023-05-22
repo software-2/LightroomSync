@@ -87,15 +87,8 @@ namespace LightroomSync
             });
         }
 
-        private async Task UploadCatalogs()
+        private Status? getNetworkStatus()
         {
-            if (Status.LightroomIsOpen())
-            {
-                Log("ERROR: Lightroom is open, cannot save to network drive");
-                return;
-            }
-
-            //Verify status file says it's safe to work (if it exists, otherwise, we can assume this is the first time)
             string networkStatusFile = config.NetworkFolder + "\\status.txt";
             if (File.Exists(networkStatusFile))
             {
@@ -103,21 +96,7 @@ namespace LightroomSync
                 string jsonContent = File.ReadAllText(networkStatusFile);
                 try
                 {
-                    Status? loadedStatus = JsonConvert.DeserializeObject<Status>(jsonContent);
-
-                    if (loadedStatus != null && loadedStatus.isSafeToOverride)
-                    {
-                        //Safe to proceed
-                    }
-                    else if (loadedStatus != null && loadedStatus.LastUser == Environment.MachineName)
-                    {
-                        //Safe to proceed since we're the ones who said it wasn't safe.
-                    }
-                    else
-                    {
-                        Log("Network status file says it's not safe to proceed! Something has gone wrong, or another catalog sync is happening!");
-                        return;
-                    }
+                    return JsonConvert.DeserializeObject<Status>(jsonContent);
                 }
                 catch (JsonException ex)
                 {
@@ -127,6 +106,32 @@ namespace LightroomSync
                 {
                     Log("Unexpected error: " + ex.Message);
                 }
+            }
+            return null;
+        }
+
+        private async Task UploadCatalogs()
+        {
+            if (Status.LightroomIsOpen())
+            {
+                Log("ERROR: Lightroom is open, cannot save to network drive");
+                return;
+            }
+
+            //Verify status file says it's safe to work (if it exists, otherwise, we can assume this is the first time)
+            Status? loadedStatus = getNetworkStatus();
+            if (loadedStatus != null && loadedStatus.isSafeToOverride)
+            {
+                //Safe to proceed
+            }
+            else if (loadedStatus != null && loadedStatus.LastUser == Environment.MachineName)
+            {
+                //Safe to proceed since we're the ones who said it wasn't safe.
+            }
+            else
+            {
+                Log("Network status file says it's not safe to proceed! Something has gone wrong, or another catalog sync is happening!");
+                return;
             }
 
             status.isSafeToOverride = false;
@@ -299,6 +304,16 @@ namespace LightroomSync
             if (Status.LightroomIsOpen() && hasDealtWithLightroomOpen == false)
             {
                 timer1.Enabled = false;
+
+                Status? loadedStatus = getNetworkStatus();
+                if (loadedStatus != null && loadedStatus.isSafeToOverride == false &&loadedStatus.LastUser != Environment.MachineName)
+                {
+                    MessageBox.Show("Another machine (" + loadedStatus.LastUser + ") has indicated it is not safe to use Lightroom!" + Environment.NewLine +
+                        "As a safety precaution, you will need to restart this app to use it more.",
+                        "STOP USING LIGHTROOM", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    return;
+                }
+
                 Log("Detected Lightroom is open. Updating the status file to alert other machines.");
                 hasDealtWithLightroomOpen = true;
                 status.isSafeToOverride = false;

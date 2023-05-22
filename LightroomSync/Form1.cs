@@ -1,5 +1,7 @@
 using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
+using System.IO.Compression;
 
 namespace LightroomSync
 {
@@ -10,7 +12,48 @@ namespace LightroomSync
 
         private void Log(string message)
         {
-            eventsTextBox.Text = message + "\n" + eventsTextBox.Text;
+            eventsTextBox.Text = message + Environment.NewLine + eventsTextBox.Text;
+        }
+
+        static void ZipFilesAndFolders(string zipFilename, string[] filesToZip, string[] foldersToZip)
+        {
+            using (ZipArchive zipArchive = ZipFile.Open(zipFilename, ZipArchiveMode.Create))
+            {
+                // Zip individual files
+                foreach (string filePath in filesToZip)
+                {
+                    if (File.Exists(filePath))
+                    {
+                        string entryName = Path.GetFileName(filePath);
+                        zipArchive.CreateEntryFromFile(filePath, entryName);
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException($"File not found: {filePath}");
+                    }
+                }
+
+                // Zip folders
+                foreach (string folderPath in foldersToZip)
+                {
+                    if (Directory.Exists(folderPath))
+                    {
+                        string folderName = Path.GetFileName(folderPath);
+
+                        // Zip files inside the folder
+                        string[] files = Directory.GetFiles(folderPath);
+                        foreach (string filePath in files)
+                        {
+                            string entryName = Path.Combine(folderName, Path.GetFileName(filePath));
+                            zipArchive.CreateEntryFromFile(filePath, entryName);
+                        }
+                    }
+                    else
+                    {
+                        throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
+                    }
+                }
+            }
         }
 
         public Form1()
@@ -69,13 +112,42 @@ namespace LightroomSync
                 return;
             }
 
+
+            
+
+
+
+
+
             string[] files = Directory.GetFiles(config.LocalFolder, "*.lrcat");
+
+            status.MostRecentVersions = Array.Empty<string>();
 
             foreach (string file in files)
             {
                 string catName = Path.GetFileNameWithoutExtension(file);
-                
+
+
+                string[] filesToZip = { config.LocalFolder + "\\" + catName + ".lrcat" };
+                string[] foldersToZip = { config.LocalFolder + "\\" + catName + ".lrcat-data", config.LocalFolder + "\\" + catName + " Helper.lrdata"};
+
+                DateTime lastModified = File.GetLastWriteTime(file);
+                string customFormat = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
+
+                Log("Zipping " + catName);
                 try
+                {
+                    ZipFilesAndFolders(customFormat, filesToZip, foldersToZip);
+                    status.MostRecentVersions.Append(customFormat);
+                    Log("Files and folders have been zipped successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Log("An error occurred while zipping files and folders: " + ex.Message);
+                }
+
+
+                /*try
                 {
                     File.Copy(config.LocalFolder + "\\" + catName + ".lrcat", config.NetworkFolder + "\\" + catName + ".lrcat", true);
                     Log(catName + ".lrcat copied successfully.");
@@ -87,7 +159,7 @@ namespace LightroomSync
                 catch (IOException ex)
                 {
                     Log("Error copying: " + ex.Message);
-                }
+                }*/
             }
         }
     }

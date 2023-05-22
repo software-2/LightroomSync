@@ -12,6 +12,12 @@ namespace LightroomSync
     internal class Status
     {
         public string LastUser { get; set; }
+        public string[] MostRecentVersions { get; set; }
+
+        public Status() {
+            LastUser = "ERR NO USER SET";
+            MostRecentVersions = Array.Empty<string>();
+        }
         public static bool LightroomIsOpen()
         {
             Process[] processes = Process.GetProcessesByName("Lightroom");

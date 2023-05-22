@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LightroomSync
@@ -13,6 +14,9 @@ namespace LightroomSync
         private Status status = new Status();
 
         private bool hasDealtWithLightroomOpen = false;
+
+
+        
 
         private void Log(string message)
         {
@@ -244,7 +248,7 @@ namespace LightroomSync
             status.LastUser = System.Environment.MachineName;
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
             
 
@@ -308,10 +312,27 @@ namespace LightroomSync
                 Status? loadedStatus = getNetworkStatus();
                 if (loadedStatus != null && loadedStatus.isSafeToOverride == false &&loadedStatus.LastUser != Environment.MachineName)
                 {
-                    MessageBox.Show("Another machine (" + loadedStatus.LastUser + ") has indicated it is not safe to use Lightroom!" + Environment.NewLine +
-                        "As a safety precaution, you will need to restart this app to use it more.",
-                        "STOP USING LIGHTROOM", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                    return;
+                    Alert alert = new(loadedStatus.LastUser);
+                    DialogResult result = alert.ShowDialog();
+                    if (result == DialogResult.Yes)
+                    {
+                        Process[] processes = Process.GetProcessesByName("Lightroom");
+                        if (processes.Length > 0)
+                        {
+                            processes[0].Kill();
+                            Log("Lightroom process killed. Please close Lightroom on " + loadedStatus.LastUser + " before trying again.");
+                            timer1.Enabled = true;
+                            return;
+                        }
+                        else
+                        {
+                            Log("ERROR: Couldn't find Lightroom process to kill! Either this is a bug or you closed it manually. Please restart this application (and consider filing a bug report on GitHub).");
+                            return;
+                        }
+                    }
+
+                    // Continue if user selected DialogResult.No, since that means they want to wipe the existing status
+                    Log("The status file on your network will be overwritten by this machine.");
                 }
 
                 Log("Detected Lightroom is open. Updating the status file to alert other machines.");

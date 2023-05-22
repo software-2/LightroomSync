@@ -29,11 +29,11 @@
         private void InitializeComponent()
         {
             label1 = new Label();
-            textBox1 = new TextBox();
+            localFolderTextBox = new TextBox();
             label2 = new Label();
-            textBox2 = new TextBox();
+            networkFolderTextBox = new TextBox();
             label3 = new Label();
-            textBox3 = new TextBox();
+            eventsTextBox = new TextBox();
             button1 = new Button();
             button2 = new Button();
             SuspendLayout();
@@ -48,12 +48,12 @@
             label1.Text = "Local Folder";
             label1.Click += label1_Click;
             // 
-            // textBox1
+            // localFolderTextBox
             // 
-            textBox1.Location = new Point(12, 27);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(776, 23);
-            textBox1.TabIndex = 1;
+            localFolderTextBox.Location = new Point(12, 27);
+            localFolderTextBox.Name = "localFolderTextBox";
+            localFolderTextBox.Size = new Size(776, 23);
+            localFolderTextBox.TabIndex = 1;
             // 
             // label2
             // 
@@ -64,13 +64,13 @@
             label2.TabIndex = 2;
             label2.Text = "Network Folder";
             // 
-            // textBox2
+            // networkFolderTextBox
             // 
-            textBox2.Location = new Point(12, 87);
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(776, 23);
-            textBox2.TabIndex = 3;
-            textBox2.Text = "P:\\Lightroom";
+            networkFolderTextBox.Location = new Point(12, 87);
+            networkFolderTextBox.Name = "networkFolderTextBox";
+            networkFolderTextBox.Size = new Size(776, 23);
+            networkFolderTextBox.TabIndex = 3;
+            networkFolderTextBox.Text = "P:\\Lightroom";
             // 
             // label3
             // 
@@ -81,13 +81,13 @@
             label3.TabIndex = 4;
             label3.Text = "Events";
             // 
-            // textBox3
+            // eventsTextBox
             // 
-            textBox3.Location = new Point(12, 152);
-            textBox3.Multiline = true;
-            textBox3.Name = "textBox3";
-            textBox3.Size = new Size(776, 126);
-            textBox3.TabIndex = 5;
+            eventsTextBox.Location = new Point(12, 152);
+            eventsTextBox.Multiline = true;
+            eventsTextBox.Name = "eventsTextBox";
+            eventsTextBox.Size = new Size(776, 126);
+            eventsTextBox.TabIndex = 5;
             // 
             // button1
             // 
@@ -97,6 +97,7 @@
             button1.TabIndex = 6;
             button1.Text = "Save";
             button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // button2
             // 
@@ -114,11 +115,11 @@
             ClientSize = new Size(800, 450);
             Controls.Add(button2);
             Controls.Add(button1);
-            Controls.Add(textBox3);
+            Controls.Add(eventsTextBox);
             Controls.Add(label3);
-            Controls.Add(textBox2);
+            Controls.Add(networkFolderTextBox);
             Controls.Add(label2);
-            Controls.Add(textBox1);
+            Controls.Add(localFolderTextBox);
             Controls.Add(label1);
             Name = "Form1";
             Text = "Form1";
@@ -130,11 +131,11 @@
         #endregion
 
         private Label label1;
-        private TextBox textBox1;
+        private TextBox localFolderTextBox;
         private Label label2;
-        private TextBox textBox2;
+        private TextBox networkFolderTextBox;
         private Label label3;
-        private TextBox textBox3;
+        private TextBox eventsTextBox;
         private Button button1;
         private Button button2;
     }

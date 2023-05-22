@@ -138,7 +138,35 @@ namespace LightroomSync
                 return;
             }
 
-            //TODO: Add network check before proceeding.
+            //Verify status file says it's safe to work (if it exists, otherwise, we can assume this is the first time)
+            string networkStatusFile = config.NetworkFolder + "\\status.txt";
+            if (File.Exists(networkStatusFile))
+            {
+
+                string jsonContent = File.ReadAllText(networkStatusFile);
+                try
+                {
+                    Status? loadedStatus = JsonConvert.DeserializeObject<Status>(jsonContent);
+
+                    if (loadedStatus != null && loadedStatus.isSafeToOverride)
+                    {
+                       //Safe to proceed
+                    }
+                    else
+                    {
+                        Log("Network status file says it's not safe to proceed! Something has gone wrong, or another catalog sync is happening!");
+                        return;
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Log("JSON parsing error: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    Log("Unexpected error: " + ex.Message);
+                }
+            }
 
             status.isSafeToOverride = false;
             try
@@ -239,7 +267,7 @@ namespace LightroomSync
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void buttonSelectNetworkFolder_Click(object sender, EventArgs e)
         {
             using (var folderBrowserDialog = new FolderBrowserDialog())
             {

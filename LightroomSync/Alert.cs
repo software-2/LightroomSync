@@ -45,6 +45,7 @@ namespace LightroomSync
             // Call FlashWindowEx to make the application icon flash
             FlashWindowEx(ref flashInfo);
         }
+
         public Alert(string lastUser)
         {
             InitializeComponent();
@@ -63,6 +64,11 @@ namespace LightroomSync
         private void button_KillLightroom_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void Alert_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            
         }
     }
 }

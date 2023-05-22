@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
+using static LightroomSync.Alert;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LightroomSync
@@ -15,19 +16,48 @@ namespace LightroomSync
 
         private bool hasDealtWithLightroomOpen = false;
 
+        private bool timerBeingHandled = false; //Used to handle async events in the timer potentially firing multiple times
 
-        
+
+        // Struct representing FLASHWINFO
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FLASHWINFO
+        {
+            public uint cbSize;
+            public IntPtr hwnd;
+            public uint dwFlags;
+            public uint uCount;
+            public uint dwTimeout;
+        }
+
+        // Import the FlashWindowEx function from user32.dll
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool FlashWindowEx(ref FLASHWINFO pwfi);
+
+        private void StopFlashing()
+        {
+            FLASHWINFO flashInfo = new FLASHWINFO
+            {
+                cbSize = Convert.ToUInt32(Marshal.SizeOf(typeof(FLASHWINFO))),
+                hwnd = Process.GetCurrentProcess().MainWindowHandle,
+                dwFlags = 0, // Stop flashing
+                uCount = 0,
+                dwTimeout = 0
+            };
+            FlashWindowEx(ref flashInfo);
+        }
 
         private void Log(string message)
         {
-            if (eventsTextBox.InvokeRequired)
-            {
-                eventsTextBox.Invoke(new Action<string>(Log), message + Environment.NewLine + eventsTextBox.Text);
-            }
-            else
-            {
+            //if (eventsTextBox.InvokeRequired)
+            //{
+            //    eventsTextBox.Invoke(new Action<string>(Log), message + Environment.NewLine + eventsTextBox.Text);
+            //}
+            //else
+            //{
                 eventsTextBox.Text = message + Environment.NewLine + eventsTextBox.Text;
-            }
+            //}
         }
 
         private async Task UpdateStatusFileOnNetwork()
@@ -250,7 +280,7 @@ namespace LightroomSync
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
+
 
 
         }
@@ -303,14 +333,25 @@ namespace LightroomSync
             }
         }
 
-        private async void timer1_Tick(object sender, EventArgs e)
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (timerBeingHandled == true)
+            {
+                return;
+            }
+            timerBeingHandled = true;
+
+            HandleTimerEvent();
+        }
+
+        private async void HandleTimerEvent()
         {
             if (Status.LightroomIsOpen() && hasDealtWithLightroomOpen == false)
             {
                 timer1.Enabled = false;
 
                 Status? loadedStatus = getNetworkStatus();
-                if (loadedStatus != null && loadedStatus.isSafeToOverride == false &&loadedStatus.LastUser != Environment.MachineName)
+                if (loadedStatus != null && loadedStatus.isSafeToOverride == false && loadedStatus.LastUser != Environment.MachineName)
                 {
                     Alert alert = new(loadedStatus.LastUser);
                     DialogResult result = alert.ShowDialog();
@@ -321,7 +362,9 @@ namespace LightroomSync
                         {
                             processes[0].Kill();
                             Log("Lightroom process killed. Please close Lightroom on " + loadedStatus.LastUser + " before trying again.");
+                            StopFlashing();
                             timer1.Enabled = true;
+                            timerBeingHandled = false;
                             return;
                         }
                         else
@@ -333,6 +376,7 @@ namespace LightroomSync
 
                     // Continue if user selected DialogResult.No, since that means they want to wipe the existing status
                     Log("The status file on your network will be overwritten by this machine.");
+                    StopFlashing();
                 }
 
                 Log("Detected Lightroom is open. Updating the status file to alert other machines.");
@@ -341,6 +385,7 @@ namespace LightroomSync
                 status.LastUser = Environment.MachineName;
                 await UpdateStatusFileOnNetwork();
                 timer1.Enabled = true;
+                timerBeingHandled = false;
             }
             else if (Status.LightroomIsOpen() == false && hasDealtWithLightroomOpen == true)
             {
@@ -349,6 +394,7 @@ namespace LightroomSync
                 await UploadCatalogs();
                 hasDealtWithLightroomOpen = false;
                 timer1.Enabled = true;
+                timerBeingHandled = false;
             }
         }
     }

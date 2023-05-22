@@ -75,6 +75,7 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "STOP USING LIGHTROOM";
             TopMost = true;
+            FormClosing += Alert_FormClosing;
             ResumeLayout(false);
         }
 

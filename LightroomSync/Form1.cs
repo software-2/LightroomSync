@@ -30,7 +30,7 @@ namespace LightroomSync
             {
                 try
                 {
-                    string filePath = config.NetworkFolder +  "\\status.txt";
+                    string filePath = config.NetworkFolder + "\\status.txt";
                     File.WriteAllText(filePath, status.ToJson());
                     Log("Updated status file");
                 }
@@ -205,6 +205,54 @@ namespace LightroomSync
             Log("Sucessfully updated all " + files.Length.ToString() + " catalog(s) to network share.");
 
 
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            string filePath = "config.txt";
+            File.WriteAllText(filePath, config.ToJson());
+        }
+
+        private void localFolderTextBox_TextChanged(object sender, EventArgs e)
+        {
+            config.LocalFolder = localFolderTextBox.Text;
+        }
+
+        private void networkFolderTextBox_TextChanged(object sender, EventArgs e)
+        {
+            config.NetworkFolder = networkFolderTextBox.Text;
+        }
+
+        private void buttonSelectLocalFolder_Click(object sender, EventArgs e)
+        {
+            using (var folderBrowserDialog = new FolderBrowserDialog())
+            {
+                // Show the folder browser dialog
+                DialogResult result = folderBrowserDialog.ShowDialog();
+
+                // Check if the user selected a folder
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath))
+                {
+                    // Update the text box with the selected folder path
+                    localFolderTextBox.Text = folderBrowserDialog.SelectedPath;
+                }
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            using (var folderBrowserDialog = new FolderBrowserDialog())
+            {
+                // Show the folder browser dialog
+                DialogResult result = folderBrowserDialog.ShowDialog();
+
+                // Check if the user selected a folder
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath))
+                {
+                    // Update the text box with the selected folder path
+                    networkFolderTextBox.Text = folderBrowserDialog.SelectedPath;
+                }
+            }
         }
     }
 }

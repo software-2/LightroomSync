@@ -36,6 +36,8 @@
             eventsTextBox = new TextBox();
             button1 = new Button();
             button2 = new Button();
+            buttonSelectLocalFolder = new Button();
+            button3 = new Button();
             SuspendLayout();
             // 
             // label1
@@ -52,8 +54,9 @@
             // 
             localFolderTextBox.Location = new Point(12, 27);
             localFolderTextBox.Name = "localFolderTextBox";
-            localFolderTextBox.Size = new Size(776, 23);
+            localFolderTextBox.Size = new Size(757, 23);
             localFolderTextBox.TabIndex = 1;
+            localFolderTextBox.TextChanged += localFolderTextBox_TextChanged;
             // 
             // label2
             // 
@@ -68,9 +71,10 @@
             // 
             networkFolderTextBox.Location = new Point(12, 87);
             networkFolderTextBox.Name = "networkFolderTextBox";
-            networkFolderTextBox.Size = new Size(776, 23);
+            networkFolderTextBox.Size = new Size(757, 23);
             networkFolderTextBox.TabIndex = 3;
             networkFolderTextBox.Text = "P:\\Lightroom";
+            networkFolderTextBox.TextChanged += networkFolderTextBox_TextChanged;
             // 
             // label3
             // 
@@ -109,11 +113,31 @@
             button2.Text = "Sync";
             button2.UseVisualStyleBackColor = true;
             // 
+            // buttonSelectLocalFolder
+            // 
+            buttonSelectLocalFolder.Location = new Point(775, 27);
+            buttonSelectLocalFolder.Name = "buttonSelectLocalFolder";
+            buttonSelectLocalFolder.Size = new Size(21, 23);
+            buttonSelectLocalFolder.TabIndex = 8;
+            buttonSelectLocalFolder.UseVisualStyleBackColor = true;
+            buttonSelectLocalFolder.Click += buttonSelectLocalFolder_Click;
+            // 
+            // button3
+            // 
+            button3.Location = new Point(775, 87);
+            button3.Name = "button3";
+            button3.Size = new Size(21, 23);
+            button3.TabIndex = 9;
+            button3.UseVisualStyleBackColor = true;
+            button3.Click += button3_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(button3);
+            Controls.Add(buttonSelectLocalFolder);
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(eventsTextBox);
@@ -124,6 +148,7 @@
             Controls.Add(label1);
             Name = "Form1";
             Text = "Form1";
+            FormClosing += Form1_FormClosing;
             Load += Form1_Load;
             ResumeLayout(false);
             PerformLayout();
@@ -139,5 +164,7 @@
         private TextBox eventsTextBox;
         private Button button1;
         private Button button2;
+        private Button buttonSelectLocalFolder;
+        private Button button3;
     }
 }

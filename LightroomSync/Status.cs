@@ -13,12 +13,12 @@ namespace LightroomSync
     {
         public string LastUser { get; set; }
         public bool isSafeToOverride { get; set; }
-        public string[] MostRecentVersions { get; set; }
+        public List<string> MostRecentVersions { get; set; }
 
         public Status() {
             LastUser = Environment.MachineName;
             isSafeToOverride = true;
-            MostRecentVersions = Array.Empty<string>();
+            MostRecentVersions = new List<string>();
         }
         public static bool LightroomIsOpen()
         {

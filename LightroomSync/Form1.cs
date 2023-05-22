@@ -12,6 +12,8 @@ namespace LightroomSync
         private Config config = new Config();
         private Status status = new Status();
 
+        private bool hasDealtWithLightroomOpen = false;
+
         private void Log(string message)
         {
             if (eventsTextBox.InvokeRequired)
@@ -85,14 +87,121 @@ namespace LightroomSync
             });
         }
 
+        private async Task UploadCatalogs()
+        {
+            if (Status.LightroomIsOpen())
+            {
+                Log("ERROR: Lightroom is open, cannot save to network drive");
+                return;
+            }
+
+            //Verify status file says it's safe to work (if it exists, otherwise, we can assume this is the first time)
+            string networkStatusFile = config.NetworkFolder + "\\status.txt";
+            if (File.Exists(networkStatusFile))
+            {
+
+                string jsonContent = File.ReadAllText(networkStatusFile);
+                try
+                {
+                    Status? loadedStatus = JsonConvert.DeserializeObject<Status>(jsonContent);
+
+                    if (loadedStatus != null && loadedStatus.isSafeToOverride)
+                    {
+                        //Safe to proceed
+                    }
+                    else if (loadedStatus != null && loadedStatus.LastUser == Environment.MachineName)
+                    {
+                        //Safe to proceed since we're the ones who said it wasn't safe.
+                    }
+                    else
+                    {
+                        Log("Network status file says it's not safe to proceed! Something has gone wrong, or another catalog sync is happening!");
+                        return;
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Log("JSON parsing error: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    Log("Unexpected error: " + ex.Message);
+                }
+            }
+
+            status.isSafeToOverride = false;
+            try
+            {
+                await UpdateStatusFileOnNetwork();
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+                return;
+            }
+
+
+            string[] files = Directory.GetFiles(config.LocalFolder, "*.lrcat");
+
+            status.MostRecentVersions = new List<string>();
+
+            foreach (string file in files)
+            {
+                string catName = Path.GetFileNameWithoutExtension(file);
+
+
+                string[] filesToZip = { config.LocalFolder + "\\" + catName + ".lrcat" };
+                string[] foldersToZip = { config.LocalFolder + "\\" + catName + ".lrcat-data", config.LocalFolder + "\\" + catName + " Helper.lrdata" };
+
+                DateTime lastModified = File.GetLastWriteTime(file);
+                string customFormat = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
+
+                Log("Zipping " + catName);
+                try
+                {
+                    await ZipFilesAndFolders(customFormat, filesToZip, foldersToZip);
+                    status.MostRecentVersions.Add(customFormat);
+                    Log("Files and folders have been zipped successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Log("ERROR: zipping files and folders: " + ex.Message);
+                    return;
+                }
+
+                Log("Moving " + customFormat + " to " + config.NetworkFolder);
+                try
+                {
+                    await Task.Run(() => { File.Move(customFormat, config.NetworkFolder + "\\" + customFormat, true); });
+                    Log(customFormat + " moved successfully.");
+                }
+                catch (IOException ex)
+                {
+                    Log("Error moving: " + ex.Message);
+                }
+            }
+
+            status.isSafeToOverride = true;
+            try
+            {
+                await UpdateStatusFileOnNetwork();
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+                return;
+            }
+            Log("Sucessfully updated all " + files.Length.ToString() + " catalog(s) to network share.");
+        }
+
         public Form1()
         {
             InitializeComponent();
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private async void label1_Click(object sender, EventArgs e)
         {
-
+            await UploadCatalogs();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -132,105 +241,7 @@ namespace LightroomSync
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            if (Status.LightroomIsOpen())
-            {
-                Log("ERROR: Lightroom is open, cannot save to network drive");
-                return;
-            }
-
-            //Verify status file says it's safe to work (if it exists, otherwise, we can assume this is the first time)
-            string networkStatusFile = config.NetworkFolder + "\\status.txt";
-            if (File.Exists(networkStatusFile))
-            {
-
-                string jsonContent = File.ReadAllText(networkStatusFile);
-                try
-                {
-                    Status? loadedStatus = JsonConvert.DeserializeObject<Status>(jsonContent);
-
-                    if (loadedStatus != null && loadedStatus.isSafeToOverride)
-                    {
-                       //Safe to proceed
-                    }
-                    else
-                    {
-                        Log("Network status file says it's not safe to proceed! Something has gone wrong, or another catalog sync is happening!");
-                        return;
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    Log("JSON parsing error: " + ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    Log("Unexpected error: " + ex.Message);
-                }
-            }
-
-            status.isSafeToOverride = false;
-            try
-            {
-                await UpdateStatusFileOnNetwork();
-            }
-            catch (Exception ex)
-            {
-                Log(ex.Message);
-                return;
-            }
-
-
-            string[] files = Directory.GetFiles(config.LocalFolder, "*.lrcat");
-
-            status.MostRecentVersions = Array.Empty<string>();
-
-            foreach (string file in files)
-            {
-                string catName = Path.GetFileNameWithoutExtension(file);
-
-
-                string[] filesToZip = { config.LocalFolder + "\\" + catName + ".lrcat" };
-                string[] foldersToZip = { config.LocalFolder + "\\" + catName + ".lrcat-data", config.LocalFolder + "\\" + catName + " Helper.lrdata" };
-
-                DateTime lastModified = File.GetLastWriteTime(file);
-                string customFormat = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
-
-                Log("Zipping " + catName);
-                try
-                {
-                    await ZipFilesAndFolders(customFormat, filesToZip, foldersToZip);
-                    status.MostRecentVersions.Append(customFormat);
-                    Log("Files and folders have been zipped successfully.");
-                }
-                catch (Exception ex)
-                {
-                    Log("ERROR: zipping files and folders: " + ex.Message);
-                    return;
-                }
-
-                Log("Moving " + customFormat + " to " + config.NetworkFolder);
-                try
-                {
-                    await Task.Run(() => { File.Move(customFormat, config.NetworkFolder + "\\" + customFormat, true); });
-                    Log(customFormat + " moved successfully.");
-                }
-                catch (IOException ex)
-                {
-                    Log("Error moving: " + ex.Message);
-                }
-            }
-
-            status.isSafeToOverride = true;
-            try
-            {
-                await UpdateStatusFileOnNetwork();
-            }
-            catch (Exception ex)
-            {
-                Log(ex.Message);
-                return;
-            }
-            Log("Sucessfully updated all " + files.Length.ToString() + " catalog(s) to network share.");
+            
 
 
         }
@@ -280,6 +291,28 @@ namespace LightroomSync
                     // Update the text box with the selected folder path
                     networkFolderTextBox.Text = folderBrowserDialog.SelectedPath;
                 }
+            }
+        }
+
+        private async void timer1_Tick(object sender, EventArgs e)
+        {
+            if (Status.LightroomIsOpen() && hasDealtWithLightroomOpen == false)
+            {
+                timer1.Enabled = false;
+                Log("Detected Lightroom is open. Updating the status file to alert other machines.");
+                hasDealtWithLightroomOpen = true;
+                status.isSafeToOverride = false;
+                status.LastUser = Environment.MachineName;
+                await UpdateStatusFileOnNetwork();
+                timer1.Enabled = true;
+            }
+            else if (Status.LightroomIsOpen() == false && hasDealtWithLightroomOpen == true)
+            {
+                //This means Lightroom WAS open, but isn't anymore. This is where we upload the catalogs.
+                timer1.Enabled = false;
+                await UploadCatalogs();
+                hasDealtWithLightroomOpen = false;
+                timer1.Enabled = true;
             }
         }
     }

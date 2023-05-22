@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             label1 = new Label();
             localFolderTextBox = new TextBox();
             label2 = new Label();
@@ -38,6 +39,7 @@
             button2 = new Button();
             buttonSelectLocalFolder = new Button();
             buttonSelectNetworkFolder = new Button();
+            timer1 = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
             // label1
@@ -131,6 +133,12 @@
             buttonSelectNetworkFolder.UseVisualStyleBackColor = true;
             buttonSelectNetworkFolder.Click += buttonSelectNetworkFolder_Click;
             // 
+            // timer1
+            // 
+            timer1.Enabled = true;
+            timer1.Interval = 1000;
+            timer1.Tick += timer1_Tick;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -166,5 +174,6 @@
         private Button button2;
         private Button buttonSelectLocalFolder;
         private Button buttonSelectNetworkFolder;
+        private System.Windows.Forms.Timer timer1;
     }
 }

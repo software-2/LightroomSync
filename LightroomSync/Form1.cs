@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Reflection.Metadata;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace LightroomSync
@@ -21,6 +22,23 @@ namespace LightroomSync
             {
                 eventsTextBox.Text = message + Environment.NewLine + eventsTextBox.Text;
             }
+        }
+
+        private async Task UpdateStatusFileOnNetwork()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    string filePath = config.NetworkFolder +  "\\status.txt";
+                    File.WriteAllText(filePath, status.ToJson());
+                    Log("Updated status file");
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("ERROR: Failed writing status file: " + ex.Message);
+                }
+            });
         }
 
         static async Task ZipFilesAndFolders(string zipFilename, string[] filesToZip, string[] foldersToZip)
@@ -120,6 +138,20 @@ namespace LightroomSync
                 return;
             }
 
+            //TODO: Add network check before proceeding.
+
+            status.isSafeToOverride = false;
+            try
+            {
+                await UpdateStatusFileOnNetwork();
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+                return;
+            }
+
+
             string[] files = Directory.GetFiles(config.LocalFolder, "*.lrcat");
 
             status.MostRecentVersions = Array.Empty<string>();
@@ -144,24 +176,35 @@ namespace LightroomSync
                 }
                 catch (Exception ex)
                 {
-                    Log("An error occurred while zipping files and folders: " + ex.Message);
+                    Log("ERROR: zipping files and folders: " + ex.Message);
+                    return;
                 }
 
-
-                /*try
+                Log("Moving " + customFormat + " to " + config.NetworkFolder);
+                try
                 {
-                    File.Copy(config.LocalFolder + "\\" + catName + ".lrcat", config.NetworkFolder + "\\" + catName + ".lrcat", true);
-                    Log(catName + ".lrcat copied successfully.");
-                    File.Copy(config.LocalFolder + "\\" + catName + ".lrcat-data", config.NetworkFolder + "\\" + catName + ".lrcat-data", true);
-                    Log(catName + ".lrcat-data copied successfully.");
-                    File.Copy(config.LocalFolder + "\\" + catName + " Helper.lrdata", config.NetworkFolder + "\\" + catName + " Helper.lrdata", true);
-                    Log(catName + " Helper.lrdata copied successfully.");
+                    await Task.Run(() => { File.Move(customFormat, config.NetworkFolder + "\\" + customFormat, true); });
+                    Log(customFormat + " moved successfully.");
                 }
                 catch (IOException ex)
                 {
-                    Log("Error copying: " + ex.Message);
-                }*/
+                    Log("Error moving: " + ex.Message);
+                }
             }
+
+            status.isSafeToOverride = true;
+            try
+            {
+                await UpdateStatusFileOnNetwork();
+            }
+            catch (Exception ex)
+            {
+                Log(ex.Message);
+                return;
+            }
+            Log("Sucessfully updated all " + files.Length.ToString() + " catalog(s) to network share.");
+
+
         }
     }
 }

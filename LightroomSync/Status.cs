@@ -12,10 +12,12 @@ namespace LightroomSync
     internal class Status
     {
         public string LastUser { get; set; }
+        public bool isSafeToOverride { get; set; }
         public string[] MostRecentVersions { get; set; }
 
         public Status() {
-            LastUser = "ERR NO USER SET";
+            LastUser = Environment.MachineName;
+            isSafeToOverride = true;
             MostRecentVersions = Array.Empty<string>();
         }
         public static bool LightroomIsOpen()

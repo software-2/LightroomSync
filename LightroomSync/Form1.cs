@@ -193,7 +193,7 @@ namespace LightroomSync
                 string[] foldersToZip = { config.LocalFolder + "\\" + catName + ".lrcat-data", config.LocalFolder + "\\" + catName + " Helper.lrdata" };
 
                 DateTime lastModified = File.GetLastWriteTime(file);
-                string customFormat = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
+                string customFormat = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm") + ".zip";
 
                 Log("Zipping " + catName);
                 try
@@ -416,7 +416,7 @@ namespace LightroomSync
                 {
                     string catName = Path.GetFileNameWithoutExtension(files[i]);
                     DateTime lastModified = File.GetLastWriteTime(files[i]);
-                    timestamped[i] = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
+                    timestamped[i] = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm") + ".zip";
                 }
 
                 foreach (string catalog in loadedStatus.MostRecentVersions)
@@ -430,7 +430,7 @@ namespace LightroomSync
                             await Task.Run(() => { File.Copy(config.NetworkFolder + "\\" + catalog, catalog); });
                             Log(catalog + " copied successfully. Erasing existing catalog.");
 
-                            string catName = catalog.Substring(0, catalog.Length - 26); //26 is len(" - yyyy-MM-dd HH-mm-ss.zip")
+                            string catName = catalog.Substring(0, catalog.Length - 23); //23 is len(" - yyyy-MM-dd HH-mm.zip")
                             string file1 = config.LocalFolder + "\\" + catName + ".lrcat";
                             string dir1 = config.LocalFolder + "\\" + catName + ".lrcat-data";
                             string dir2 = config.LocalFolder + "\\" + catName + " Helper.lrdata";

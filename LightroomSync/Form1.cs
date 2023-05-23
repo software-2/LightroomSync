@@ -1,10 +1,14 @@
+using LightroomSync.Properties;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
+using System.Security.Principal;
 using static LightroomSync.Alert;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -323,6 +327,11 @@ namespace LightroomSync
             networkFolderTextBox.Text = config.NetworkFolder;
 
             status.LastUser = System.Environment.MachineName;
+
+            if (Utils.ShortcutExistsInStartupFolder())
+            {
+                launchAtStartupToolStripMenuItem.Image = Resources.checkmark;
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -591,6 +600,30 @@ namespace LightroomSync
         private void minimizeToTrayToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void launchAtStartupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //Either remove or add from startup as a toggle.
+            if (Utils.ShortcutExistsInStartupFolder())
+            {
+                Utils.DeleteShortcutFromStartupFolder();
+                launchAtStartupToolStripMenuItem.Image = null;
+            }
+            else
+            {
+                string assemblyLocation = Assembly.GetEntryAssembly().Location;
+                string executablePath = Path.GetDirectoryName(assemblyLocation);
+                string appPath = executablePath + "\\LightroomSync.exe";
+                launchAtStartupToolStripMenuItem.Image = Resources.checkmark;
+
+                Utils.CreateShortcutInStartupFolder(appPath);
+            }
         }
     }
 }

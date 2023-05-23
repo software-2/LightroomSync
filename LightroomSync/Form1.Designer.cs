@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             label1 = new Label();
             localFolderTextBox = new TextBox();
             label2 = new Label();
@@ -149,6 +150,7 @@
             launchAtStartupToolStripMenuItem.Name = "launchAtStartupToolStripMenuItem";
             launchAtStartupToolStripMenuItem.Size = new Size(180, 22);
             launchAtStartupToolStripMenuItem.Text = "Launch At Startup";
+            launchAtStartupToolStripMenuItem.Click += launchAtStartupToolStripMenuItem_Click;
             // 
             // minimizeToTrayToolStripMenuItem
             // 
@@ -162,6 +164,7 @@
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             exitToolStripMenuItem.Size = new Size(180, 22);
             exitToolStripMenuItem.Text = "E&xit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
@@ -204,6 +207,7 @@
             Controls.Add(localFolderTextBox);
             Controls.Add(label1);
             Controls.Add(menuStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "Lightroom Sync";

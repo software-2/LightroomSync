@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using static LightroomSync.Alert;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -293,12 +294,28 @@ namespace LightroomSync
 
         private void localFolderTextBox_TextChanged(object sender, EventArgs e)
         {
-            config.LocalFolder = localFolderTextBox.Text;
+            if (Directory.Exists(localFolderTextBox.Text))
+            {
+                localFolderTextBox.BackColor = Color.White;
+                config.LocalFolder = localFolderTextBox.Text;
+            }
+            else
+            {
+                localFolderTextBox.BackColor = Color.LightPink;
+            }
         }
 
         private void networkFolderTextBox_TextChanged(object sender, EventArgs e)
         {
-            config.NetworkFolder = networkFolderTextBox.Text;
+            if (Directory.Exists(networkFolderTextBox.Text))
+            {
+                networkFolderTextBox.BackColor = Color.White;
+                config.NetworkFolder = networkFolderTextBox.Text;
+            }
+            else
+            {
+                networkFolderTextBox.BackColor = Color.LightPink;
+            }
         }
 
         private void buttonSelectLocalFolder_Click(object sender, EventArgs e)
@@ -501,6 +518,28 @@ namespace LightroomSync
                 timer1.Enabled = true;
                 timerBeingHandled = false;
             }
+        }
+
+        private void submitABugToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string url = "https://github.com/software-2/LightroomSync/issues";
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+        }
+
+        private void gitHubPageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string url = "https://github.com/software-2/LightroomSync";
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
         }
     }
 }

@@ -243,7 +243,7 @@ namespace LightroomSync
             Log("Sucessfully updated all " + files.Length.ToString() + " catalog(s) to network share.");
         }
 
-        public Form1()
+        public Form1(bool startMinimized)
         {
             InitializeComponent();
 
@@ -263,13 +263,23 @@ namespace LightroomSync
             // Handle the form's Resize event
             this.Resize += OnResize;
             trayIcon.Click += OnRestore;
+
+            if (startMinimized)
+            {
+                this.WindowState = FormWindowState.Minimized;
+                this.Hide();
+                this.ShowInTaskbar = false;
+                trayIcon.Visible = true;
+            }
         }
 
         private void OnRestore(object sender, EventArgs e)
         {
             // Restore the form from the system tray
             this.Show();
+            this.ShowInTaskbar = true;
             this.WindowState = FormWindowState.Normal;
+            trayIcon.Visible = false;
         }
 
         private void OnExit(object sender, EventArgs e)

@@ -20,6 +20,7 @@ namespace LightroomSync
             shortcut.TargetPath = appPath;
             shortcut.WorkingDirectory = Path.GetDirectoryName(appPath);
             shortcut.Description = "LightroomSync";
+            shortcut.Arguments = "tray";
             shortcut.Save();
         }
 

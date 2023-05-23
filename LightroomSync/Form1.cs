@@ -19,6 +19,9 @@ namespace LightroomSync
 
         private bool timerBeingHandled = false; //Used to handle async events in the timer potentially firing multiple times
 
+        private NotifyIcon trayIcon;
+        private ContextMenuStrip trayMenu;
+
 
         // Struct representing FLASHWINFO
         [StructLayout(LayoutKind.Sequential)]
@@ -35,6 +38,8 @@ namespace LightroomSync
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool FlashWindowEx(ref FLASHWINFO pwfi);
+
+
 
         private void StopFlashing()
         {
@@ -237,6 +242,47 @@ namespace LightroomSync
         public Form1()
         {
             InitializeComponent();
+
+            // Create the NotifyIcon instance
+            trayIcon = new NotifyIcon();
+            trayIcon.Text = "LightroomSync";
+            trayIcon.Icon = new Icon(GetType(), "camera.ico");
+
+            // Create a context menu for the tray icon
+            trayMenu = new ContextMenuStrip();
+            trayMenu.Items.Add("Restore", null, OnRestore);
+            trayMenu.Items.Add("Exit", null, OnExit);
+
+            // Assign the context menu to the tray icon
+            trayIcon.ContextMenuStrip = trayMenu;
+
+            // Handle the form's Resize event
+            this.Resize += OnResize;
+            trayIcon.Click += OnRestore;
+        }
+
+        private void OnRestore(object sender, EventArgs e)
+        {
+            // Restore the form from the system tray
+            this.Show();
+            this.WindowState = FormWindowState.Normal;
+        }
+
+        private void OnExit(object sender, EventArgs e)
+        {
+            // Clean up resources and close the application
+            trayIcon.Dispose();
+            System.Windows.Forms.Application.Exit();
+        }
+
+        private void OnResize(object sender, EventArgs e)
+        {
+            // Minimize the form to the system tray when it's minimized
+            if (FormWindowState.Minimized == this.WindowState)
+            {
+                this.Hide();
+                trayIcon.Visible = true;
+            }
         }
 
         private async void label1_Click(object sender, EventArgs e)
@@ -540,6 +586,11 @@ namespace LightroomSync
                 UseShellExecute = true
             };
             Process.Start(startInfo);
+        }
+
+        private void minimizeToTrayToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
         }
     }
 }

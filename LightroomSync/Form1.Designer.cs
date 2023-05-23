@@ -147,19 +147,20 @@
             // launchAtStartupToolStripMenuItem
             // 
             launchAtStartupToolStripMenuItem.Name = "launchAtStartupToolStripMenuItem";
-            launchAtStartupToolStripMenuItem.Size = new Size(169, 22);
+            launchAtStartupToolStripMenuItem.Size = new Size(180, 22);
             launchAtStartupToolStripMenuItem.Text = "Launch At Startup";
             // 
             // minimizeToTrayToolStripMenuItem
             // 
             minimizeToTrayToolStripMenuItem.Name = "minimizeToTrayToolStripMenuItem";
-            minimizeToTrayToolStripMenuItem.Size = new Size(169, 22);
+            minimizeToTrayToolStripMenuItem.Size = new Size(180, 22);
             minimizeToTrayToolStripMenuItem.Text = "Minimize To Tray";
+            minimizeToTrayToolStripMenuItem.Click += minimizeToTrayToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(169, 22);
+            exitToolStripMenuItem.Size = new Size(180, 22);
             exitToolStripMenuItem.Text = "E&xit";
             // 
             // helpToolStripMenuItem
@@ -172,21 +173,21 @@
             // submitABugToolStripMenuItem
             // 
             submitABugToolStripMenuItem.Name = "submitABugToolStripMenuItem";
-            submitABugToolStripMenuItem.Size = new Size(180, 22);
+            submitABugToolStripMenuItem.Size = new Size(147, 22);
             submitABugToolStripMenuItem.Text = "Submit A Bug";
             submitABugToolStripMenuItem.Click += submitABugToolStripMenuItem_Click;
             // 
             // gitHubPageToolStripMenuItem
             // 
             gitHubPageToolStripMenuItem.Name = "gitHubPageToolStripMenuItem";
-            gitHubPageToolStripMenuItem.Size = new Size(180, 22);
+            gitHubPageToolStripMenuItem.Size = new Size(147, 22);
             gitHubPageToolStripMenuItem.Text = "GitHub Page";
             gitHubPageToolStripMenuItem.Click += gitHubPageToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(180, 22);
+            aboutToolStripMenuItem.Size = new Size(147, 22);
             aboutToolStripMenuItem.Text = "About";
             // 
             // Form1

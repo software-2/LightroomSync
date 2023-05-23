@@ -12,6 +12,12 @@ namespace LightroomSync
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
+            if (!Directory.Exists(Utils.GetWorkingDir()))
+            {
+                Directory.CreateDirectory(Utils.GetWorkingDir());
+            }
+            Directory.SetCurrentDirectory(Utils.GetWorkingDir());
+
             bool startMinimized = false;
             foreach (string argument in args)
             {

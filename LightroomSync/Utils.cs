@@ -39,5 +39,10 @@ namespace LightroomSync
 
             System.IO.File.Delete(shortcutPath);
         }
+
+        public static string GetWorkingDir()
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\LightroomSync";
+        }
     }
 }

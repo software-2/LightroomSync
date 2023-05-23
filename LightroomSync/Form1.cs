@@ -50,14 +50,14 @@ namespace LightroomSync
 
         private void Log(string message)
         {
-            //if (eventsTextBox.InvokeRequired)
-            //{
-            //    eventsTextBox.Invoke(new Action<string>(Log), message + Environment.NewLine + eventsTextBox.Text);
-            //}
-            //else
-            //{
+            if (eventsTextBox.InvokeRequired)
+            {
+                eventsTextBox.Invoke(new Action<string>(Log), message + Environment.NewLine + eventsTextBox.Text);
+            }
+            else
+            {
                 eventsTextBox.Text = message + Environment.NewLine + eventsTextBox.Text;
-            //}
+            }
         }
 
         private async Task UpdateStatusFileOnNetwork()
@@ -337,15 +337,17 @@ namespace LightroomSync
         {
             if (timerBeingHandled == true)
             {
-                return;
+                //return;
             }
-            timerBeingHandled = true;
 
             HandleTimerEvent();
         }
 
         private async void HandleTimerEvent()
         {
+
+            timerBeingHandled = true;
+
             if (Status.LightroomIsOpen() && hasDealtWithLightroomOpen == false)
             {
                 timer1.Enabled = false;
@@ -393,6 +395,109 @@ namespace LightroomSync
                 timer1.Enabled = false;
                 await UploadCatalogs();
                 hasDealtWithLightroomOpen = false;
+                timer1.Enabled = true;
+                timerBeingHandled = false;
+            }
+            else if (Status.LightroomIsOpen() == false && hasDealtWithLightroomOpen == false)
+            {
+                // Lightroom has not been open, so there's a possibility the network has newer catalogs.
+                timer1.Enabled = false;
+                Status? loadedStatus = getNetworkStatus();
+                if (loadedStatus == null)
+                {
+                    timer1.Enabled = true;
+                    timerBeingHandled = false;
+                    return;
+                }
+
+                string[] files = Directory.GetFiles(config.LocalFolder, "*.lrcat");
+                string[] timestamped = new string[files.Length];
+                for (int i = 0; i < files.Length; i++)
+                {
+                    string catName = Path.GetFileNameWithoutExtension(files[i]);
+                    DateTime lastModified = File.GetLastWriteTime(files[i]);
+                    timestamped[i] = catName + " - " + lastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".zip";
+                }
+
+                foreach (string catalog in loadedStatus.MostRecentVersions)
+                {
+                    if (!timestamped.Contains(catalog))
+                    {
+                        //We do not have the most recent version.
+                        Log("Newer catalog version detected! Copying " + catalog + " to local storage.");
+                        try
+                        {
+                            await Task.Run(() => { File.Copy(config.NetworkFolder + "\\" + catalog, catalog); });
+                            Log(catalog + " copied successfully. Erasing existing catalog.");
+
+                            string catName = catalog.Substring(0, catalog.Length - 26); //26 is len(" - yyyy-MM-dd HH-mm-ss.zip")
+                            string file1 = config.LocalFolder + "\\" + catName + ".lrcat";
+                            string dir1 = config.LocalFolder + "\\" + catName + ".lrcat-data";
+                            string dir2 = config.LocalFolder + "\\" + catName + " Helper.lrdata";
+                            try
+                            {
+                                if (File.Exists(file1))
+                                {
+                                    File.Delete(file1);
+                                    Log("Deleted " + file1);
+                                }
+                                if (Directory.Exists(dir1))
+                                {
+                                    Directory.Delete(dir1, recursive: true);
+                                    Log("Deleted " + dir1);
+                                }
+                                if (Directory.Exists(dir2))
+                                {
+                                    Directory.Delete(dir2, recursive: true);
+                                    Log("Deleted " + dir2);
+                                }
+                            }
+                            catch (IOException ex)
+                            {
+                                Log("An I/O error occurred: " + ex.Message);
+                                Log("YOU SHOULD MANUALLY EXTRACT THE ZIP TO RECOVER YOUR CATALOG");
+                                return;
+                            }
+                            catch (UnauthorizedAccessException ex)
+                            {
+                                Log("Unauthorized access error occurred: " + ex.Message);
+                                Log("YOU SHOULD MANUALLY EXTRACT THE ZIP TO RECOVER YOUR CATALOG");
+                                return;
+                            }
+                            catch (Exception ex)
+                            {
+                                Log("An error occurred: " + ex.Message);
+                                Log("YOU SHOULD MANUALLY EXTRACT THE ZIP TO RECOVER YOUR CATALOG");
+                                return;
+                            }
+
+                            Log("Extracting zip");
+                            try
+                            {
+                                await Task.Run(() =>
+                                {
+                                    ZipFile.ExtractToDirectory(catalog, config.LocalFolder);
+                                });
+                                Log("Unzipped " + catalog + " - Now deleting the zip file locally.");
+                            }
+                            catch (Exception ex)
+                            {
+                                Log("An error occurred while unzipping the file: " + ex.Message);
+                                Log("YOU SHOULD MANUALLY EXTRACT THE ZIP TO RECOVER YOUR CATALOG");
+                            }
+
+                            //You know what? If this file I just created has errors in deleting, I want someone to go file a bug report.
+                            //That's absurd, and I'm not adding another wall of error handling around it.
+                            File.Delete(catalog);
+                            Log("Zip file deleted. This catalog is up to date!");
+                        }
+                        catch (IOException ex)
+                        {
+                            Log("Error copying: " + ex.Message);
+                        }
+                    }
+                }
+
                 timer1.Enabled = true;
                 timerBeingHandled = false;
             }

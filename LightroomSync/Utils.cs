@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Diagnostics;
 
 namespace LightroomSync
 {
@@ -43,6 +44,16 @@ namespace LightroomSync
         public static string GetWorkingDir()
         {
             return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\LightroomSync";
+        }
+
+        public static void OpenURL(string url)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
         }
     }
 }

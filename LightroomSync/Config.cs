@@ -12,9 +12,12 @@ namespace LightroomSync
         public string LocalFolder { get; set; }
         public string NetworkFolder { get; set; }
 
+        public bool AutoCheckForUpdates { get; set; }
+
         public Config() { 
             this.LocalFolder = "C:\\Users\\" + System.Environment.UserName + "\\Pictures\\Lightroom";
             this.NetworkFolder = "P:\\Lightroom";
+            this.AutoCheckForUpdates = true;
         }
         
         public string ToJson()

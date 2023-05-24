@@ -602,7 +602,7 @@ namespace LightroomSync
             {
                 try
                 {
-                    version = await client.GetStringAsync("https://github.com/software-2/LightroomSync/raw/master/latestversion.txt");
+                    version = await client.GetStringAsync("https://github.com/software-2/LightroomSync/raw/master/latestVersion.txt");
                 }
                 catch (Exception ex)
                 {
@@ -622,7 +622,7 @@ namespace LightroomSync
 
             var parsed = Version.Parse(version);
 
-            if (parsed.CompareTo(currentVersion) != 0)
+            if (parsed.CompareTo(Version.Parse(currentVersion)) != 0)
             {
                 var dialog = "There is a new version! Want to go get it?" + Environment.NewLine + Environment.NewLine + "New Version: " + parsed.ToString() + Environment.NewLine + "Your Version: " + currentVersion.ToString();
                 var result = MessageBox.Show(dialog, "New Version!", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
